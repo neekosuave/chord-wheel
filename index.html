@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>My Chord Wheel</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #111111;
+      color: white;
+      text-align: center;
+      padding: 30px;
+    }
+
+    .card {
+      max-width: 520px;
+      margin: auto;
+      background: #1f1f1f;
+      padding: 25px;
+      border-radius: 20px;
+    }
+
+    select, button {
+      font-size: 18px;
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      margin: 6px;
+    }
+
+    button {
+      background: #333333;
+      color: white;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #555555;
+    }
+
+    .box {
+      background: #2b2b2b;
+      padding: 18px;
+      border-radius: 15px;
+      margin-top: 18px;
+      text-align: left;
+    }
+
+    .big {
+      font-size: 24px;
+      line-height: 1.6;
+      text-align: center;
+    }
+
+    .progression {
+      background: #111111;
+      padding: 12px;
+      border-radius: 10px;
+      margin: 10px 0;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <h1>My Chord Wheel</h1>
+    <p>Choose a key and get chords instantly.</p>
+
+    <select id="keyPicker">
+      <option value="C">C Major</option>
+      <option value="G">G Major</option>
+      <option value="D">D Major</option>
+      <option value="A">A Major</option>
+      <option value="E">E Major</option>
+      <option value="B">B Major</option>
+      <option value="F#">F# Major</option>
+      <option value="Db">Db Major</option>
+      <option value="Ab">Ab Major</option>
+      <option value="Eb">Eb Major</option>
+      <option value="Bb">Bb Major</option>
+      <option value="F">F Major</option>
+    </select>
+
+    <button onclick="showChords()">Show Chords</button>
+
+    <div class="box">
+      <h2 id="title">C Major</h2>
+
+      <h3>Chords in Key</h3>
+      <div class="big" id="chords">C – Dm – Em – F – G – Am – Bdim</div>
+
+      <h3>R&B Progressions</h3>
+      <div id="progressions"></div>
+    </div>
+  </div>
+
+  <script>
+    const keys = {
+      "C":  ["C", "Dm", "Em", "F", "G", "Am", "Bdim"],
+      "G":  ["G", "Am", "Bm", "C", "D", "Em", "F#dim"],
+      "D":  ["D", "Em", "F#m", "G", "A", "Bm", "C#dim"],
+      "A":  ["A", "Bm", "C#m", "D", "E", "F#m", "G#dim"],
+      "E":  ["E", "F#m", "G#m", "A", "B", "C#m", "D#dim"],
+      "B":  ["B", "C#m", "D#m", "E", "F#", "G#m", "A#dim"],
+      "F#": ["F#", "G#m", "A#m", "B", "C#", "D#m", "E#dim"],
+      "Db": ["Db", "Ebm", "Fm", "Gb", "Ab", "Bbm", "Cdim"],
+      "Ab": ["Ab", "Bbm", "Cm", "Db", "Eb", "Fm", "Gdim"],
+      "Eb": ["Eb", "Fm", "Gm", "Ab", "Bb", "Cm", "Ddim"],
+      "Bb": ["Bb", "Cm", "Dm", "Eb", "F", "Gm", "Adim"],
+      "F":  ["F", "Gm", "Am", "Bb", "C", "Dm", "Edim"]
+    };
+
+    function showChords() {
+      const selectedKey = document.getElementById("keyPicker").value;
+      const chordList = keys[selectedKey];
+
+      document.getElementById("title").textContent = selectedKey + " Major";
+      document.getElementById("chords").textContent = chordList.join(" – ");
+
+      const progressionIdeas = [
+        {
+          name: "vi – IV – I – V",
+          chords: [chordList[5], chordList[3], chordList[0], chordList[4]]
+        },
+        {
+          name: "ii – V – I",
+          chords: [chordList[1], chordList[4], chordList[0]]
+        },
+        {
+          name: "I – iii – IV – V",
+          chords: [chordList[0], chordList[2], chordList[3], chordList[4]]
+        },
+        {
+          name: "I – vi – IV – V",
+          chords: [chordList[0], chordList[5], chordList[3], chordList[4]]
+        }
+      ];
+
+      let html = "";
+
+      progressionIdeas.forEach(function(item) {
+        html += "<div class='progression'>";
+        html += "<strong>" + item.name + "</strong><br>";
+        html += item.chords.join(" – ");
+        html += "</div>";
+      });
+
+      document.getElementById("progressions").innerHTML = html;
+    }
+
+    showChords();
+  </script>
+</body>
+</html>
