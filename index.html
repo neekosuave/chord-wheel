@@ -7,18 +7,28 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #111;
+      background:
+        linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.78)),
+        url("clouds.jpg");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
       color: white;
       text-align: center;
       padding: 30px;
+      min-height: 100vh;
     }
 
     .card {
-      background: #222;
+      background: rgba(20, 20, 20, 0.78);
       max-width: 650px;
       margin: auto;
       padding: 25px;
       border-radius: 20px;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
     }
 
     select, button, input {
@@ -27,6 +37,11 @@
       margin: 6px;
       border-radius: 10px;
       border: none;
+    }
+
+    select, input {
+      background: rgba(255, 255, 255, 0.92);
+      color: #111;
     }
 
     button {
@@ -75,14 +90,14 @@
     }
 
     .box {
-      background: #333;
+      background: rgba(30, 30, 30, 0.78);
       padding: 20px;
       border-radius: 15px;
       margin-top: 20px;
     }
 
     .progression {
-      background: #111;
+      background: rgba(0, 0, 0, 0.68);
       padding: 15px;
       margin: 12px 0;
       border-radius: 10px;
@@ -98,6 +113,10 @@
       font-size: 14px;
       margin-top: 6px;
       min-height: 18px;
+    }
+
+    h1 {
+      margin-bottom: 8px;
     }
   </style>
 </head>
@@ -212,73 +231,25 @@
     function getProgressionIdeas(chords) {
       if (mode === "major") {
         return [
-          {
-            name: "Smooth R&B: vi – IV – I – V",
-            chords: [chords[5], chords[3], chords[0], chords[4]]
-          },
-          {
-            name: "Classic Soul: ii – V – I",
-            chords: [chords[1], chords[4], chords[0]]
-          },
-          {
-            name: "Emotional: I – iii – IV – V",
-            chords: [chords[0], chords[2], chords[3], chords[4]]
-          },
-          {
-            name: "Late Night: vi – ii – V – I",
-            chords: [chords[5], chords[1], chords[4], chords[0]]
-          },
-          {
-            name: "Dreamy: IV – I – V – vi",
-            chords: [chords[3], chords[0], chords[4], chords[5]]
-          },
-          {
-            name: "Gospel Lift: I – IV – ii – V",
-            chords: [chords[0], chords[3], chords[1], chords[4]]
-          },
-          {
-            name: "Pop R&B: I – V – vi – IV",
-            chords: [chords[0], chords[4], chords[5], chords[3]]
-          },
-          {
-            name: "Floating: iii – vi – ii – V",
-            chords: [chords[2], chords[5], chords[1], chords[4]]
-          }
+          { name: "Smooth R&B: vi – IV – I – V", chords: [chords[5], chords[3], chords[0], chords[4]] },
+          { name: "Classic Soul: ii – V – I", chords: [chords[1], chords[4], chords[0]] },
+          { name: "Emotional: I – iii – IV – V", chords: [chords[0], chords[2], chords[3], chords[4]] },
+          { name: "Late Night: vi – ii – V – I", chords: [chords[5], chords[1], chords[4], chords[0]] },
+          { name: "Dreamy: IV – I – V – vi", chords: [chords[3], chords[0], chords[4], chords[5]] },
+          { name: "Gospel Lift: I – IV – ii – V", chords: [chords[0], chords[3], chords[1], chords[4]] },
+          { name: "Pop R&B: I – V – vi – IV", chords: [chords[0], chords[4], chords[5], chords[3]] },
+          { name: "Floating: iii – vi – ii – V", chords: [chords[2], chords[5], chords[1], chords[4]] }
         ];
       } else {
         return [
-          {
-            name: "Dark R&B: i – VI – III – VII",
-            chords: [chords[0], chords[5], chords[2], chords[6]]
-          },
-          {
-            name: "Trap Soul: i – VII – VI – VII",
-            chords: [chords[0], chords[6], chords[5], chords[6]]
-          },
-          {
-            name: "Late Night: i – iv – VII – III",
-            chords: [chords[0], chords[3], chords[6], chords[2]]
-          },
-          {
-            name: "Sad R&B: i – VI – iv – V",
-            chords: [chords[0], chords[5], chords[3], chords[4]]
-          },
-          {
-            name: "Moody: i – iv – VI – V",
-            chords: [chords[0], chords[3], chords[5], chords[4]]
-          },
-          {
-            name: "Toxic R&B: i – VII – iv – VI",
-            chords: [chords[0], chords[6], chords[3], chords[5]]
-          },
-          {
-            name: "Brent Style: i – VI – VII – i",
-            chords: [chords[0], chords[5], chords[6], chords[0]]
-          },
-          {
-            name: "Smooth Minor: i – iv – v – VI",
-            chords: [chords[0], chords[3], chords[4], chords[5]]
-          }
+          { name: "Dark R&B: i – VI – III – VII", chords: [chords[0], chords[5], chords[2], chords[6]] },
+          { name: "Trap Soul: i – VII – VI – VII", chords: [chords[0], chords[6], chords[5], chords[6]] },
+          { name: "Late Night: i – iv – VII – III", chords: [chords[0], chords[3], chords[6], chords[2]] },
+          { name: "Sad R&B: i – VI – iv – V", chords: [chords[0], chords[5], chords[3], chords[4]] },
+          { name: "Moody: i – iv – VI – V", chords: [chords[0], chords[3], chords[5], chords[4]] },
+          { name: "Toxic R&B: i – VII – iv – VI", chords: [chords[0], chords[6], chords[3], chords[5]] },
+          { name: "Brent Style: i – VI – VII – i", chords: [chords[0], chords[5], chords[6], chords[0]] },
+          { name: "Smooth Minor: i – iv – v – VI", chords: [chords[0], chords[3], chords[4], chords[5]] }
         ];
       }
     }
@@ -314,7 +285,7 @@
 
     function copyProgression(index) {
       const item = currentDisplayedProgressions[index];
-      const textToCopy = item.name + "\\n" + item.chords.join(" - ");
+      const textToCopy = item.name + "\n" + item.chords.join(" - ");
 
       navigator.clipboard.writeText(textToCopy).then(function() {
         document.getElementById("copyStatus" + index).textContent = "Copied!";
@@ -412,7 +383,6 @@
         intervals = [0, 3, 6];
       }
 
-      // Adds bass note one octave lower plus the regular triad
       return [rootMidi - 12].concat(intervals.map(function(interval) {
         return rootMidi + interval;
       }));
@@ -482,7 +452,6 @@
 
       let track = [];
 
-      // Tempo event
       const microsecondsPerBeat = Math.round(60000000 / bpm);
       track = track.concat(writeVarLength(0));
       track.push(0xFF, 0x51, 0x03);
@@ -490,27 +459,23 @@
       track.push((microsecondsPerBeat >> 8) & 0xFF);
       track.push(microsecondsPerBeat & 0xFF);
 
-      // Program change: Electric Piano 1
       track = track.concat(writeVarLength(0));
       track.push(0xC0, 0x04);
 
       chords.forEach(function(chordName) {
         const notes = getChordMidiNotes(chordName);
 
-        // Note on for all notes in the chord
-        notes.forEach(function(note, noteIndex) {
-          track = track.concat(writeVarLength(noteIndex === 0 ? 0 : 0));
+        notes.forEach(function(note) {
+          track = track.concat(writeVarLength(0));
           track.push(0x90, note, 80);
         });
 
-        // Note off for all notes in the chord
         notes.forEach(function(note, noteIndex) {
           track = track.concat(writeVarLength(noteIndex === 0 ? chordDurationTicks : 0));
           track.push(0x80, note, 0);
         });
       });
 
-      // End of track
       track = track.concat(writeVarLength(0));
       track.push(0xFF, 0x2F, 0x00);
 
