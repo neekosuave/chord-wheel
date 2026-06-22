@@ -15,13 +15,13 @@
 
     .card {
       background: #222;
-      max-width: 550px;
+      max-width: 600px;
       margin: auto;
       padding: 25px;
       border-radius: 20px;
     }
 
-    select, button {
+    select, button, input {
       font-size: 18px;
       padding: 12px;
       margin: 8px;
@@ -50,6 +50,18 @@
       font-weight: bold;
     }
 
+    .play-btn {
+      background: #2ecc71;
+      color: #111;
+      font-weight: bold;
+    }
+
+    .stop-btn {
+      background: #e74c3c;
+      color: white;
+      font-weight: bold;
+    }
+
     .box {
       background: #333;
       padding: 20px;
@@ -59,9 +71,14 @@
 
     .progression {
       background: #111;
-      padding: 12px;
-      margin: 10px 0;
+      padding: 15px;
+      margin: 12px 0;
       border-radius: 10px;
+    }
+
+    .small {
+      font-size: 14px;
+      color: #ccc;
     }
   </style>
 </head>
@@ -70,7 +87,7 @@
 
   <div class="card">
     <h1>My Chord Wheel</h1>
-    <p>Choose major or minor, then pick a key.</p>
+    <p>Choose major or minor, pick a key, then preview the progressions.</p>
 
     <button id="majorBtn" class="active" onclick="setMode('major')">Major</button>
     <button id="minorBtn" onclick="setMode('minor')">Minor</button>
@@ -81,7 +98,13 @@
 
     <br>
 
+    <label>Tempo:</label>
+    <input id="tempoPicker" type="number" value="86" min="40" max="180">
+
+    <br>
+
     <button class="random-btn" onclick="randomizeProgressions()">Randomize Progressions</button>
+    <button class="stop-btn" onclick="stopPlayback()">Stop</button>
 
     <div class="box">
       <h2 id="keyTitle">C Major</h2>
@@ -90,6 +113,7 @@
       <p id="chordOutput">C – Dm – Em – F – G – Am – Bdim</p>
 
       <h3>Random R&B Progressions</h3>
+      <p class="small">Click Play to hear a simple chord preview.</p>
       <div id="progressionOutput"></div>
     </div>
   </div>
@@ -126,6 +150,9 @@
     };
 
     let mode = "major";
+    let currentDisplayedProgressions = [];
+    let audioContext = null;
+    let activeOscillators = [];
 
     function setMode(newMode) {
       mode = newMode;
@@ -247,18 +274,145 @@
         return Math.random() - 0.5;
       });
 
-      const randomThree = shuffled.slice(0, 3);
+      currentDisplayedProgressions = shuffled.slice(0, 3);
 
       let output = "";
 
-      randomThree.forEach(function(item) {
+      currentDisplayedProgressions.forEach(function(item, index) {
         output += "<div class='progression'>";
         output += "<strong>" + item.name + "</strong><br>";
         output += item.chords.join(" – ");
+        output += "<br><br>";
+        output += "<button class='play-btn' onclick='playProgression(" + index + ")'>Play</button>";
         output += "</div>";
       });
 
       document.getElementById("progressionOutput").innerHTML = output;
+    }
+
+    function getAudioContext() {
+      if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      return audioContext;
+    }
+
+    function stopPlayback() {
+      activeOscillators.forEach(function(osc) {
+        try {
+          osc.stop();
+        } catch (error) {}
+      });
+
+      activeOscillators = [];
+    }
+
+    function playProgression(index) {
+      stopPlayback();
+
+      const ctx = getAudioContext();
+
+      if (ctx.state === "suspended") {
+        ctx.resume();
+      }
+
+      const progression = currentDisplayedProgressions[index].chords;
+      const bpm = Number(document.getElementById("tempoPicker").value) || 86;
+
+      // Each chord lasts 2 beats
+      const secondsPerChord = (60 / bpm) * 2;
+
+      progression.forEach(function(chordName, chordIndex) {
+        const startTime = ctx.currentTime + chordIndex * secondsPerChord;
+        playChord(chordName, startTime, secondsPerChord);
+      });
+    }
+
+    function playChord(chordName, startTime, duration) {
+      const ctx = getAudioContext();
+
+      const midiNotes = getChordMidiNotes(chordName);
+
+      midiNotes.forEach(function(midiNote) {
+        const oscillator = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        oscillator.type = "sine";
+        oscillator.frequency.value = midiToFrequency(midiNote);
+
+        gain.gain.setValueAtTime(0, startTime);
+        gain.gain.linearRampToValueAtTime(0.12, startTime + 0.05);
+        gain.gain.setValueAtTime(0.12, startTime + duration - 0.15);
+        gain.gain.linearRampToValueAtTime(0, startTime + duration);
+
+        oscillator.connect(gain);
+        gain.connect(ctx.destination);
+
+        oscillator.start(startTime);
+        oscillator.stop(startTime + duration + 0.1);
+
+        activeOscillators.push(oscillator);
+      });
+    }
+
+    function getChordMidiNotes(chordName) {
+      let root = chordName;
+      let quality = "major";
+
+      if (chordName.endsWith("dim")) {
+        root = chordName.replace("dim", "");
+        quality = "dim";
+      } else if (chordName.endsWith("m")) {
+        root = chordName.slice(0, -1);
+        quality = "minor";
+      }
+
+      const rootMidi = noteToMidi(root);
+
+      let intervals = [];
+
+      if (quality === "major") {
+        intervals = [0, 4, 7];
+      } else if (quality === "minor") {
+        intervals = [0, 3, 7];
+      } else if (quality === "dim") {
+        intervals = [0, 3, 6];
+      }
+
+      return intervals.map(function(interval) {
+        return rootMidi + interval;
+      });
+    }
+
+    function noteToMidi(noteName) {
+      const noteMap = {
+        "C": 60,
+        "C#": 61,
+        "Db": 61,
+        "D": 62,
+        "D#": 63,
+        "Eb": 63,
+        "E": 64,
+        "E#": 65,
+        "Fb": 64,
+        "F": 65,
+        "F#": 66,
+        "Gb": 66,
+        "G": 67,
+        "G#": 68,
+        "Ab": 68,
+        "A": 69,
+        "A#": 70,
+        "Bb": 70,
+        "B": 71,
+        "Cb": 71
+      };
+
+      return noteMap[noteName] || 60;
+    }
+
+    function midiToFrequency(midiNote) {
+      return 440 * Math.pow(2, (midiNote - 69) / 12);
     }
 
     loadKeys();
