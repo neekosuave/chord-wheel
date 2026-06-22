@@ -15,7 +15,7 @@
 
     .card {
       background: #222;
-      max-width: 500px;
+      max-width: 550px;
       margin: auto;
       padding: 25px;
       border-radius: 20px;
@@ -24,15 +24,20 @@
     select, button {
       font-size: 18px;
       padding: 12px;
-      margin: 10px;
+      margin: 8px;
       border-radius: 10px;
       border: none;
     }
 
     button {
+      background: #444;
+      color: white;
+      cursor: pointer;
+    }
+
+    button.active {
       background: white;
       color: black;
-      cursor: pointer;
     }
 
     .box {
@@ -41,6 +46,13 @@
       border-radius: 15px;
       margin-top: 20px;
     }
+
+    .progression {
+      background: #111;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 10px;
+    }
   </style>
 </head>
 
@@ -48,53 +60,144 @@
 
   <div class="card">
     <h1>My Chord Wheel</h1>
-    <p>Choose a key to see the chords.</p>
+    <p>Choose major or minor, then pick a key.</p>
 
-    <select id="keyPicker">
-      <option value="C">C Major</option>
-      <option value="G">G Major</option>
-      <option value="D">D Major</option>
-      <option value="A">A Major</option>
-      <option value="F">F Major</option>
-    </select>
+    <button id="majorBtn" class="active" onclick="setMode('major')">Major</button>
+    <button id="minorBtn" onclick="setMode('minor')">Minor</button>
 
     <br>
 
-    <button onclick="showChords()">Show Chords</button>
+    <select id="keyPicker" onchange="showChords()"></select>
 
     <div class="box">
       <h2 id="keyTitle">C Major</h2>
+
+      <h3>Chords in Key</h3>
       <p id="chordOutput">C – Dm – Em – F – G – Am – Bdim</p>
-      <h3>R&B Progression</h3>
-      <p id="progressionOutput">Am – F – C – G</p>
+
+      <h3>R&B Progressions</h3>
+      <div id="progressionOutput"></div>
     </div>
   </div>
 
   <script>
-    const keys = {
+    const majorKeys = {
       "C": ["C", "Dm", "Em", "F", "G", "Am", "Bdim"],
       "G": ["G", "Am", "Bm", "C", "D", "Em", "F#dim"],
       "D": ["D", "Em", "F#m", "G", "A", "Bm", "C#dim"],
       "A": ["A", "Bm", "C#m", "D", "E", "F#m", "G#dim"],
+      "E": ["E", "F#m", "G#m", "A", "B", "C#m", "D#dim"],
+      "B": ["B", "C#m", "D#m", "E", "F#", "G#m", "A#dim"],
+      "F#": ["F#", "G#m", "A#m", "B", "C#", "D#m", "E#dim"],
+      "Db": ["Db", "Ebm", "Fm", "Gb", "Ab", "Bbm", "Cdim"],
+      "Ab": ["Ab", "Bbm", "Cm", "Db", "Eb", "Fm", "Gdim"],
+      "Eb": ["Eb", "Fm", "Gm", "Ab", "Bb", "Cm", "Ddim"],
+      "Bb": ["Bb", "Cm", "Dm", "Eb", "F", "Gm", "Adim"],
       "F": ["F", "Gm", "Am", "Bb", "C", "Dm", "Edim"]
     };
 
+    const minorKeys = {
+      "Am": ["Am", "Bdim", "C", "Dm", "Em", "F", "G"],
+      "Em": ["Em", "F#dim", "G", "Am", "Bm", "C", "D"],
+      "Bm": ["Bm", "C#dim", "D", "Em", "F#m", "G", "A"],
+      "F#m": ["F#m", "G#dim", "A", "Bm", "C#m", "D", "E"],
+      "C#m": ["C#m", "D#dim", "E", "F#m", "G#m", "A", "B"],
+      "G#m": ["G#m", "A#dim", "B", "C#m", "D#m", "E", "F#"],
+      "D#m": ["D#m", "E#dim", "F#", "G#m", "A#m", "B", "C#"],
+      "Bbm": ["Bbm", "Cdim", "Db", "Ebm", "Fm", "Gb", "Ab"],
+      "Fm": ["Fm", "Gdim", "Ab", "Bbm", "Cm", "Db", "Eb"],
+      "Cm": ["Cm", "Ddim", "Eb", "Fm", "Gm", "Ab", "Bb"],
+      "Gm": ["Gm", "Adim", "Bb", "Cm", "Dm", "Eb", "F"],
+      "Dm": ["Dm", "Edim", "F", "Gm", "Am", "Bb", "C"]
+    };
+
+    let mode = "major";
+
+    function setMode(newMode) {
+      mode = newMode;
+
+      document.getElementById("majorBtn").classList.toggle("active", mode === "major");
+      document.getElementById("minorBtn").classList.toggle("active", mode === "minor");
+
+      loadKeys();
+      showChords();
+    }
+
+    function loadKeys() {
+      const keyPicker = document.getElementById("keyPicker");
+      keyPicker.innerHTML = "";
+
+      const keys = mode === "major" ? Object.keys(majorKeys) : Object.keys(minorKeys);
+
+      keys.forEach(function(key) {
+        const option = document.createElement("option");
+        option.value = key;
+        option.textContent = mode === "major" ? key + " Major" : key + " Minor";
+        keyPicker.appendChild(option);
+      });
+    }
+
     function showChords() {
       const selectedKey = document.getElementById("keyPicker").value;
-      const chords = keys[selectedKey];
+      const chords = mode === "major" ? majorKeys[selectedKey] : minorKeys[selectedKey];
 
-      document.getElementById("keyTitle").textContent = selectedKey + " Major";
+      document.getElementById("keyTitle").textContent =
+        mode === "major" ? selectedKey + " Major" : selectedKey + " Minor";
+
       document.getElementById("chordOutput").textContent = chords.join(" – ");
 
-      const progression = [
-        chords[5],
-        chords[3],
-        chords[0],
-        chords[4]
-      ];
+      let progressionIdeas = [];
 
-      document.getElementById("progressionOutput").textContent = progression.join(" – ");
+      if (mode === "major") {
+        progressionIdeas = [
+          {
+            name: "Smooth R&B: vi – IV – I – V",
+            chords: [chords[5], chords[3], chords[0], chords[4]]
+          },
+          {
+            name: "Classic Soul: ii – V – I",
+            chords: [chords[1], chords[4], chords[0]]
+          },
+          {
+            name: "Emotional: I – iii – IV – V",
+            chords: [chords[0], chords[2], chords[3], chords[4]]
+          }
+        ];
+      } else {
+        progressionIdeas = [
+          {
+            name: "Dark R&B: i – VI – III – VII",
+            chords: [chords[0], chords[5], chords[2], chords[6]]
+          },
+          {
+            name: "Trap Soul: i – VII – VI – VII",
+            chords: [chords[0], chords[6], chords[5], chords[6]]
+          },
+          {
+            name: "Late Night: i – iv – VII – III",
+            chords: [chords[0], chords[3], chords[6], chords[2]]
+          },
+          {
+            name: "Sad R&B: i – VI – iv – V",
+            chords: [chords[0], chords[5], chords[3], chords[4]]
+          }
+        ];
+      }
+
+      let output = "";
+
+      progressionIdeas.forEach(function(item) {
+        output += "<div class='progression'>";
+        output += "<strong>" + item.name + "</strong><br>";
+        output += item.chords.join(" – ");
+        output += "</div>";
+      });
+
+      document.getElementById("progressionOutput").innerHTML = output;
     }
+
+    loadKeys();
+    showChords();
   </script>
 
 </body>
