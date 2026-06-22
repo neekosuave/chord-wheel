@@ -35,9 +35,19 @@
       cursor: pointer;
     }
 
+    button:hover {
+      background: #666;
+    }
+
     button.active {
       background: white;
       color: black;
+    }
+
+    .random-btn {
+      background: #d4af37;
+      color: #111;
+      font-weight: bold;
     }
 
     .box {
@@ -69,13 +79,17 @@
 
     <select id="keyPicker" onchange="showChords()"></select>
 
+    <br>
+
+    <button class="random-btn" onclick="randomizeProgressions()">Randomize Progressions</button>
+
     <div class="box">
       <h2 id="keyTitle">C Major</h2>
 
       <h3>Chords in Key</h3>
       <p id="chordOutput">C – Dm – Em – F – G – Am – Bdim</p>
 
-      <h3>R&B Progressions</h3>
+      <h3>Random R&B Progressions</h3>
       <div id="progressionOutput"></div>
     </div>
   </div>
@@ -146,10 +160,12 @@
 
       document.getElementById("chordOutput").textContent = chords.join(" – ");
 
-      let progressionIdeas = [];
+      randomizeProgressions();
+    }
 
+    function getProgressionIdeas(chords) {
       if (mode === "major") {
-        progressionIdeas = [
+        return [
           {
             name: "Smooth R&B: vi – IV – I – V",
             chords: [chords[5], chords[3], chords[0], chords[4]]
@@ -161,10 +177,30 @@
           {
             name: "Emotional: I – iii – IV – V",
             chords: [chords[0], chords[2], chords[3], chords[4]]
+          },
+          {
+            name: "Late Night: vi – ii – V – I",
+            chords: [chords[5], chords[1], chords[4], chords[0]]
+          },
+          {
+            name: "Dreamy: IV – I – V – vi",
+            chords: [chords[3], chords[0], chords[4], chords[5]]
+          },
+          {
+            name: "Gospel Lift: I – IV – ii – V",
+            chords: [chords[0], chords[3], chords[1], chords[4]]
+          },
+          {
+            name: "Pop R&B: I – V – vi – IV",
+            chords: [chords[0], chords[4], chords[5], chords[3]]
+          },
+          {
+            name: "Floating: iii – vi – ii – V",
+            chords: [chords[2], chords[5], chords[1], chords[4]]
           }
         ];
       } else {
-        progressionIdeas = [
+        return [
           {
             name: "Dark R&B: i – VI – III – VII",
             chords: [chords[0], chords[5], chords[2], chords[6]]
@@ -180,13 +216,42 @@
           {
             name: "Sad R&B: i – VI – iv – V",
             chords: [chords[0], chords[5], chords[3], chords[4]]
+          },
+          {
+            name: "Moody: i – iv – VI – V",
+            chords: [chords[0], chords[3], chords[5], chords[4]]
+          },
+          {
+            name: "Toxic R&B: i – VII – iv – VI",
+            chords: [chords[0], chords[6], chords[3], chords[5]]
+          },
+          {
+            name: "Brent Style: i – VI – VII – i",
+            chords: [chords[0], chords[5], chords[6], chords[0]]
+          },
+          {
+            name: "Smooth Minor: i – iv – v – VI",
+            chords: [chords[0], chords[3], chords[4], chords[5]]
           }
         ];
       }
+    }
+
+    function randomizeProgressions() {
+      const selectedKey = document.getElementById("keyPicker").value;
+      const chords = mode === "major" ? majorKeys[selectedKey] : minorKeys[selectedKey];
+
+      const allProgressions = getProgressionIdeas(chords);
+
+      const shuffled = allProgressions.sort(function() {
+        return Math.random() - 0.5;
+      });
+
+      const randomThree = shuffled.slice(0, 3);
 
       let output = "";
 
-      progressionIdeas.forEach(function(item) {
+      randomThree.forEach(function(item) {
         output += "<div class='progression'>";
         output += "<strong>" + item.name + "</strong><br>";
         output += item.chords.join(" – ");
