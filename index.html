@@ -15,16 +15,16 @@
 
     .card {
       background: #222;
-      max-width: 600px;
+      max-width: 650px;
       margin: auto;
       padding: 25px;
       border-radius: 20px;
     }
 
     select, button, input {
-      font-size: 18px;
+      font-size: 16px;
       padding: 12px;
-      margin: 8px;
+      margin: 6px;
       border-radius: 10px;
       border: none;
     }
@@ -56,6 +56,18 @@
       font-weight: bold;
     }
 
+    .copy-btn {
+      background: #3498db;
+      color: white;
+      font-weight: bold;
+    }
+
+    .midi-btn {
+      background: #9b59b6;
+      color: white;
+      font-weight: bold;
+    }
+
     .stop-btn {
       background: #e74c3c;
       color: white;
@@ -80,6 +92,13 @@
       font-size: 14px;
       color: #ccc;
     }
+
+    .copied {
+      color: #2ecc71;
+      font-size: 14px;
+      margin-top: 6px;
+      min-height: 18px;
+    }
   </style>
 </head>
 
@@ -87,7 +106,7 @@
 
   <div class="card">
     <h1>My Chord Wheel</h1>
-    <p>Choose major or minor, pick a key, then preview the progressions.</p>
+    <p>Choose major or minor, pick a key, then preview, copy, or download MIDI.</p>
 
     <button id="majorBtn" class="active" onclick="setMode('major')">Major</button>
     <button id="minorBtn" onclick="setMode('minor')">Minor</button>
@@ -113,7 +132,7 @@
       <p id="chordOutput">C – Dm – Em – F – G – Am – Bdim</p>
 
       <h3>Random R&B Progressions</h3>
-      <p class="small">Click Play to hear a simple chord preview.</p>
+      <p class="small">Copy gives you chord names. Download MIDI gives you a file for your DAW.</p>
       <div id="progressionOutput"></div>
     </div>
   </div>
@@ -284,10 +303,25 @@
         output += item.chords.join(" – ");
         output += "<br><br>";
         output += "<button class='play-btn' onclick='playProgression(" + index + ")'>Play</button>";
+        output += "<button class='copy-btn' onclick='copyProgression(" + index + ")'>Copy</button>";
+        output += "<button class='midi-btn' onclick='downloadMidi(" + index + ")'>Download MIDI</button>";
+        output += "<div class='copied' id='copyStatus" + index + "'></div>";
         output += "</div>";
       });
 
       document.getElementById("progressionOutput").innerHTML = output;
+    }
+
+    function copyProgression(index) {
+      const item = currentDisplayedProgressions[index];
+      const textToCopy = item.name + "\\n" + item.chords.join(" - ");
+
+      navigator.clipboard.writeText(textToCopy).then(function() {
+        document.getElementById("copyStatus" + index).textContent = "Copied!";
+        setTimeout(function() {
+          document.getElementById("copyStatus" + index).textContent = "";
+        }, 1500);
+      });
     }
 
     function getAudioContext() {
@@ -319,7 +353,6 @@
       const progression = currentDisplayedProgressions[index].chords;
       const bpm = Number(document.getElementById("tempoPicker").value) || 86;
 
-      // Each chord lasts 2 beats
       const secondsPerChord = (60 / bpm) * 2;
 
       progression.forEach(function(chordName, chordIndex) {
@@ -379,9 +412,10 @@
         intervals = [0, 3, 6];
       }
 
-      return intervals.map(function(interval) {
+      // Adds bass note one octave lower plus the regular triad
+      return [rootMidi - 12].concat(intervals.map(function(interval) {
         return rootMidi + interval;
-      });
+      }));
     }
 
     function noteToMidi(noteName) {
@@ -405,7 +439,7 @@
         "A#": 70,
         "Bb": 70,
         "B": 71,
-        "Cb": 71
+        "Cb": 59
       };
 
       return noteMap[noteName] || 60;
@@ -413,6 +447,113 @@
 
     function midiToFrequency(midiNote) {
       return 440 * Math.pow(2, (midiNote - 69) / 12);
+    }
+
+    function downloadMidi(index) {
+      const item = currentDisplayedProgressions[index];
+      const bpm = Number(document.getElementById("tempoPicker").value) || 86;
+
+      const midiData = createMidiFile(item.chords, bpm);
+      const blob = new Blob([new Uint8Array(midiData)], { type: "audio/midi" });
+
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+
+      const selectedKey = document.getElementById("keyPicker").value;
+      const cleanName = sanitizeFileName(selectedKey + "-" + item.name);
+
+      link.download = cleanName + ".mid";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function sanitizeFileName(name) {
+      return name
+        .replace(/[^a-z0-9]/gi, "-")
+        .replace(/-+/g, "-")
+        .toLowerCase();
+    }
+
+    function createMidiFile(chords, bpm) {
+      const ticksPerBeat = 480;
+      const beatsPerChord = 2;
+      const chordDurationTicks = ticksPerBeat * beatsPerChord;
+
+      let track = [];
+
+      // Tempo event
+      const microsecondsPerBeat = Math.round(60000000 / bpm);
+      track = track.concat(writeVarLength(0));
+      track.push(0xFF, 0x51, 0x03);
+      track.push((microsecondsPerBeat >> 16) & 0xFF);
+      track.push((microsecondsPerBeat >> 8) & 0xFF);
+      track.push(microsecondsPerBeat & 0xFF);
+
+      // Program change: Electric Piano 1
+      track = track.concat(writeVarLength(0));
+      track.push(0xC0, 0x04);
+
+      chords.forEach(function(chordName) {
+        const notes = getChordMidiNotes(chordName);
+
+        // Note on for all notes in the chord
+        notes.forEach(function(note, noteIndex) {
+          track = track.concat(writeVarLength(noteIndex === 0 ? 0 : 0));
+          track.push(0x90, note, 80);
+        });
+
+        // Note off for all notes in the chord
+        notes.forEach(function(note, noteIndex) {
+          track = track.concat(writeVarLength(noteIndex === 0 ? chordDurationTicks : 0));
+          track.push(0x80, note, 0);
+        });
+      });
+
+      // End of track
+      track = track.concat(writeVarLength(0));
+      track.push(0xFF, 0x2F, 0x00);
+
+      const header = [
+        0x4D, 0x54, 0x68, 0x64,
+        0x00, 0x00, 0x00, 0x06,
+        0x00, 0x00,
+        0x00, 0x01,
+        (ticksPerBeat >> 8) & 0xFF,
+        ticksPerBeat & 0xFF
+      ];
+
+      const trackHeader = [
+        0x4D, 0x54, 0x72, 0x6B,
+        (track.length >> 24) & 0xFF,
+        (track.length >> 16) & 0xFF,
+        (track.length >> 8) & 0xFF,
+        track.length & 0xFF
+      ];
+
+      return header.concat(trackHeader).concat(track);
+    }
+
+    function writeVarLength(value) {
+      let buffer = value & 0x7F;
+      let bytes = [];
+
+      while ((value >>= 7)) {
+        buffer <<= 8;
+        buffer |= ((value & 0x7F) | 0x80);
+      }
+
+      while (true) {
+        bytes.push(buffer & 0xFF);
+
+        if (buffer & 0x80) {
+          buffer >>= 8;
+        } else {
+          break;
+        }
+      }
+
+      return bytes;
     }
 
     loadKeys();
